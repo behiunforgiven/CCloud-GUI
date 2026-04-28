@@ -409,7 +409,7 @@ class _SingleSeriesScreenState extends State<SingleSeriesScreen> {
                                 color: isDarkMode
                                     ? Theme.of(
                                         context,
-                                      ).colorScheme.surfaceVariant
+                                      ).colorScheme.surfaceContainerHighest
                                     : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
@@ -602,7 +602,9 @@ class _SingleSeriesScreenState extends State<SingleSeriesScreen> {
                               ),
                             ),
                             subtitle: Text(
-                              source.type.isEmpty ? 'فرمت پیشفرض' : source.type.toUpperCase(),
+                              source.type.isEmpty
+                                  ? 'فرمت پیشفرض'
+                                  : source.type.toUpperCase(),
                               style: GoogleFonts.vazirmatn(
                                 fontSize: 14,
                                 color: Theme.of(
@@ -692,7 +694,9 @@ class _SingleSeriesScreenState extends State<SingleSeriesScreen> {
                             ),
                           ),
                           Text(
-                            source.type.isEmpty ? 'فرمت پیشفرض' : source.type.toUpperCase(),
+                            source.type.isEmpty
+                                ? 'فرمت پیشفرض'
+                                : source.type.toUpperCase(),
                             style: GoogleFonts.vazirmatn(
                               fontSize: 16,
                               color: Theme.of(

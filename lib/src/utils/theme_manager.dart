@@ -73,7 +73,7 @@ class ThemeManager with ChangeNotifier {
             seedColor: const Color(0xFF2196F3),
             brightness: Brightness.light,
           ).copyWith(
-            surfaceVariant: Colors.grey[200],
+            surfaceContainerHighest: Colors.grey[200],
             onSurfaceVariant: Colors.grey[700],
           ),
       textTheme: GoogleFonts.vazirmatnTextTheme(ThemeData.light().textTheme),
@@ -96,7 +96,7 @@ class ThemeManager with ChangeNotifier {
             seedColor: const Color(0xFF2196F3),
             brightness: Brightness.dark,
           ).copyWith(
-            surfaceVariant: const Color(0xFF2E2E2E),
+            surfaceContainerHighest: const Color(0xFF2E2E2E),
             onSurfaceVariant: Colors.grey[300],
           ),
       textTheme: GoogleFonts.vazirmatnTextTheme(ThemeData.dark().textTheme),

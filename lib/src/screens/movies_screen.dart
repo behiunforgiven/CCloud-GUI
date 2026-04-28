@@ -6,6 +6,7 @@ import '../widgets/genre_selector.dart';
 import '../screens/single_movie_screen.dart';
 import '../providers/movie_provider.dart';
 import '../providers/genre_provider.dart';
+import '../providers/countries_provider.dart';
 import '../models/media_item.dart';
 import '../utils/storage_utils.dart';
 
@@ -24,6 +25,15 @@ class _MoviesScreenState extends State<MoviesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final movieProvider = Provider.of<MovieProvider>(context, listen: false);
+      final countriesProvider = Provider.of<CountriesProvider>(
+        context,
+        listen: false,
+      );
+
+      if (countriesProvider.countries.isEmpty) {
+        countriesProvider.loadCountries();
+      }
+
       if (movieProvider.movies.isEmpty) {
         movieProvider.loadMovies();
       }
@@ -66,7 +76,10 @@ class _MoviesScreenState extends State<MoviesScreen> {
             ),
             const SizedBox(height: 24),
             // Filter and sort options
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 // Genre filter button
                 Consumer<GenreProvider>(
@@ -96,7 +109,30 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 20),
+                // Country filter dropdown
+                Consumer2<CountriesProvider, MovieProvider>(
+                  builder: (context, countriesProvider, movieProvider, child) {
+                    return DropdownButton<int>(
+                      value: movieProvider.selectedCountryId,
+                      items: [
+                        const DropdownMenuItem<int>(
+                          value: 0,
+                          child: Text('همه کشورها'),
+                        ),
+                        ...countriesProvider.countries.map(
+                          (country) => DropdownMenuItem<int>(
+                            value: country.id,
+                            child: Text(country.title),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        movieProvider.selectCountry(value);
+                      },
+                    );
+                  },
+                ),
                 // Sort filter dropdown
                 Consumer<MovieProvider>(
                   builder: (context, movieProvider, child) {
@@ -124,7 +160,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 20),
                 // Refresh button
                 IconButton(
                   icon: const Icon(Icons.refresh),
@@ -172,11 +207,10 @@ class _MoviesScreenState extends State<MoviesScreen> {
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
-                      final crossAxisCount =
-                          ((constraints.maxWidth + spacing) /
-                                  (cardWidth + spacing))
-                              .floor()
-                              .toInt();
+                      final crossAxisCount = ((constraints.maxWidth + spacing) /
+                              (cardWidth + spacing))
+                          .floor()
+                          .toInt();
 
                       final count = crossAxisCount.clamp(1, 5);
 
@@ -188,8 +222,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
-                        itemCount:
-                            movieProvider.movies.length +
+                        itemCount: movieProvider.movies.length +
                             (movieProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == movieProvider.movies.length) {

@@ -12,6 +12,7 @@ class MovieProvider with ChangeNotifier {
   int _currentPage = 0;
   bool _hasMore = true;
   int _selectedGenreId = 0;
+  int _selectedCountryId = 0;
   FilterType _selectedFilter = FilterType.defaultFilter;
 
   List<MediaItem> get movies => _movies;
@@ -19,6 +20,7 @@ class MovieProvider with ChangeNotifier {
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
   int get selectedGenreId => _selectedGenreId;
+  int get selectedCountryId => _selectedCountryId;
   FilterType get selectedFilter => _selectedFilter;
 
   Future<void> loadMovies({bool refresh = false}) async {
@@ -44,6 +46,7 @@ class MovieProvider with ChangeNotifier {
       final newMovies = await _movieRepository.getMovies(
         page: _currentPage,
         genreId: _selectedGenreId,
+        countryId: _selectedCountryId,
         filterType: _selectedFilter,
       );
 
@@ -82,6 +85,11 @@ class MovieProvider with ChangeNotifier {
     refreshMovies();
   }
 
+  void selectCountry(int countryId) {
+    _selectedCountryId = countryId;
+    refreshMovies();
+  }
+
   void selectFilter(FilterType filter) {
     _selectedFilter = filter;
     refreshMovies();
@@ -89,6 +97,7 @@ class MovieProvider with ChangeNotifier {
 
   void resetFilters() {
     _selectedGenreId = 0;
+    _selectedCountryId = 0;
     _selectedFilter = FilterType.defaultFilter;
     refreshMovies();
   }

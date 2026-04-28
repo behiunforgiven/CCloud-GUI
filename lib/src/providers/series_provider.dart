@@ -12,6 +12,7 @@ class SeriesProvider with ChangeNotifier {
   int _currentPage = 0;
   bool _hasMore = true;
   int _selectedGenreId = 0;
+  int _selectedCountryId = 0;
   FilterType _selectedFilter = FilterType.defaultFilter;
 
   List<MediaItem> get series => _series;
@@ -19,6 +20,7 @@ class SeriesProvider with ChangeNotifier {
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
   int get selectedGenreId => _selectedGenreId;
+  int get selectedCountryId => _selectedCountryId;
   FilterType get selectedFilter => _selectedFilter;
 
   Future<void> loadSeries({bool refresh = false}) async {
@@ -44,6 +46,7 @@ class SeriesProvider with ChangeNotifier {
       final newSeries = await _seriesRepository.getSeries(
         page: _currentPage,
         genreId: _selectedGenreId,
+        countryId: _selectedCountryId,
         filterType: _selectedFilter,
       );
 
@@ -85,6 +88,11 @@ class SeriesProvider with ChangeNotifier {
     refreshSeries();
   }
 
+  void selectCountry(int countryId) {
+    _selectedCountryId = countryId;
+    refreshSeries();
+  }
+
   void selectFilter(FilterType filter) {
     _selectedFilter = filter;
     refreshSeries();
@@ -92,6 +100,7 @@ class SeriesProvider with ChangeNotifier {
 
   void resetFilters() {
     _selectedGenreId = 0;
+    _selectedCountryId = 0;
     _selectedFilter = FilterType.defaultFilter;
     refreshSeries();
   }

@@ -103,7 +103,7 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
                     )
                   : null,
               filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceVariant,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,
@@ -346,7 +346,7 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
                     )
                   : null,
               filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceVariant,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,

@@ -61,7 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           width: 250,
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? Theme.of(context).colorScheme.surfaceVariant
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest
                                 : Theme.of(context).colorScheme.primaryContainer
                                       .withOpacity(0.3),
                             borderRadius: BorderRadius.circular(16),
@@ -134,7 +136,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Theme.of(context).colorScheme.surfaceVariant
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
@@ -176,7 +180,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             padding: const EdgeInsets.all(25),
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Theme.of(context).colorScheme.surfaceVariant
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
@@ -257,7 +263,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             padding: const EdgeInsets.all(25),
                             decoration: BoxDecoration(
                               color: isDarkMode
-                                  ? Theme.of(context).colorScheme.surfaceVariant
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
@@ -584,7 +592,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
                       : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -635,7 +643,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
                       : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -697,7 +705,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
                       : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -881,7 +889,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
             color: isDarkMode
-                ? Theme.of(context).colorScheme.surfaceVariant
+                ? Theme.of(context).colorScheme.surfaceContainerHighest
                 : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -1104,7 +1112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Theme.of(context).colorScheme.surfaceVariant
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
                       : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [

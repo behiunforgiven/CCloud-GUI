@@ -6,6 +6,7 @@ import '../widgets/genre_selector.dart';
 import '../screens/single_series_screen.dart';
 import '../providers/series_provider.dart';
 import '../providers/genre_provider.dart';
+import '../providers/countries_provider.dart';
 import '../models/media_item.dart';
 import '../utils/storage_utils.dart';
 
@@ -27,6 +28,15 @@ class _SeriesScreenState extends State<SeriesScreen> {
         context,
         listen: false,
       );
+      final countriesProvider = Provider.of<CountriesProvider>(
+        context,
+        listen: false,
+      );
+
+      if (countriesProvider.countries.isEmpty) {
+        countriesProvider.loadCountries();
+      }
+
       if (seriesProvider.series.isEmpty) {
         seriesProvider.loadSeries();
       }
@@ -72,7 +82,10 @@ class _SeriesScreenState extends State<SeriesScreen> {
             ),
             const SizedBox(height: 24),
             // Filter and sort options
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 // Genre filter button
                 Consumer<GenreProvider>(
@@ -102,7 +115,30 @@ class _SeriesScreenState extends State<SeriesScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 20),
+                // Country filter dropdown
+                Consumer2<CountriesProvider, SeriesProvider>(
+                  builder: (context, countriesProvider, seriesProvider, child) {
+                    return DropdownButton<int>(
+                      value: seriesProvider.selectedCountryId,
+                      items: [
+                        const DropdownMenuItem<int>(
+                          value: 0,
+                          child: Text('همه کشورها'),
+                        ),
+                        ...countriesProvider.countries.map(
+                          (country) => DropdownMenuItem<int>(
+                            value: country.id,
+                            child: Text(country.title),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        seriesProvider.selectCountry(value);
+                      },
+                    );
+                  },
+                ),
                 // Sort filter dropdown
                 Consumer<SeriesProvider>(
                   builder: (context, seriesProvider, child) {
@@ -130,7 +166,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 20),
                 // Refresh button
                 IconButton(
                   icon: const Icon(Icons.refresh),
@@ -149,10 +184,11 @@ class _SeriesScreenState extends State<SeriesScreen> {
             Expanded(
               child: Consumer<SeriesProvider>(
                 builder: (context, seriesProvider, child) {
-                  if (seriesProvider.isLoading && seriesProvider.series.isEmpty) {
+                  if (seriesProvider.isLoading &&
+                      seriesProvider.series.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  
+
                   // Add error handling similar to movies screen
                   if (seriesProvider.errorMessage.isNotEmpty) {
                     return Center(
@@ -175,11 +211,10 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
-                      final crossAxisCount =
-                          ((constraints.maxWidth + spacing) /
-                                  (cardWidth + spacing))
-                              .floor()
-                              .toInt();
+                      final crossAxisCount = ((constraints.maxWidth + spacing) /
+                              (cardWidth + spacing))
+                          .floor()
+                          .toInt();
 
                       // Ensure at least 1 column and max 5 columns
                       final count = crossAxisCount.clamp(1, 5);
@@ -187,13 +222,14 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       return GridView.builder(
                         controller: _scrollController,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: count, // Use dynamic count instead of fixed 5
-                          childAspectRatio: 0.68, // Adjusted for the new card dimensions
+                          crossAxisCount:
+                              count, // Use dynamic count instead of fixed 5
+                          childAspectRatio:
+                              0.68, // Adjusted for the new card dimensions
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
-                        itemCount:
-                            seriesProvider.series.length +
+                        itemCount: seriesProvider.series.length +
                             (seriesProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == seriesProvider.series.length) {

@@ -8,11 +8,12 @@ class SeriesRepository extends BaseRepository {
   Future<List<MediaItem>> getSeries({
     int page = 0,
     int genreId = 0,
+    int countryId = 0,
     FilterType filterType = FilterType.defaultFilter,
   }) async {
     try {
       final url =
-          '$baseUrl$_seriesEndpoint/$genreId/${filterType.apiValue}/$page/$apiKey';
+          '$baseUrl$_seriesEndpoint/$genreId/$countryId/${filterType.apiValue}/$page/$apiKey';
       final jsonData = await executeRequest(url);
       return parseSeries(jsonData);
     } catch (e) {
