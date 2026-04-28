@@ -92,9 +92,16 @@ class _SeriesScreenState extends State<SeriesScreen> {
                   builder: (context, genreProvider, child) {
                     return ElevatedButton(
                       onPressed: () {
+                        final seriesProvider = Provider.of<SeriesProvider>(
+                          context,
+                          listen: false,
+                        );
+
                         showModalBottomSheet(
                           context: context,
-                          builder: (context) => const GenreSelector(),
+                          builder: (context) => GenreSelector(
+                            onGenreSelected: seriesProvider.selectGenre,
+                          ),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.vertical(
                               top: Radius.circular(20),
@@ -211,10 +218,11 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
-                      final crossAxisCount = ((constraints.maxWidth + spacing) /
-                              (cardWidth + spacing))
-                          .floor()
-                          .toInt();
+                      final crossAxisCount =
+                          ((constraints.maxWidth + spacing) /
+                                  (cardWidth + spacing))
+                              .floor()
+                              .toInt();
 
                       // Ensure at least 1 column and max 5 columns
                       final count = crossAxisCount.clamp(1, 5);
@@ -229,7 +237,8 @@ class _SeriesScreenState extends State<SeriesScreen> {
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
-                        itemCount: seriesProvider.series.length +
+                        itemCount:
+                            seriesProvider.series.length +
                             (seriesProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == seriesProvider.series.length) {

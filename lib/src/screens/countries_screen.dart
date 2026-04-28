@@ -20,13 +20,36 @@ class CountriesScreen extends StatefulWidget {
 class _CountriesScreenState extends State<CountriesScreen> {
   CountryModel? _selectedCountry;
   String _searchQuery = '';
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CountriesProvider>(context, listen: false).loadCountries();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final mediaProvider = Provider.of<CountryMediaProvider>(
+        context,
+        listen: false,
+      );
+      if (!mediaProvider.isLoading && mediaProvider.hasMore) {
+        mediaProvider.loadMore();
+      }
+    }
   }
 
   @override
@@ -222,7 +245,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
                 Provider.of<CountryMediaProvider>(
                   context,
                   listen: false,
-                ).loadMediaByCountry(country.id);
+                ).loadMediaByCountry(country.id, refresh: true);
               },
             );
           },
@@ -272,6 +295,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
                   mediaProvider.loadMediaByCountry(
                     _selectedCountry!.id,
                     filterType: mediaProvider.currentFilter,
+                    refresh: true,
                   );
                 },
               ),
@@ -314,6 +338,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
                           onPressed: () => mediaProvider.loadMediaByCountry(
                             _selectedCountry!.id,
                             filterType: mediaProvider.currentFilter,
+                            refresh: true,
                           ),
                           child: Text(
                             'تلاش مجدد',
@@ -381,6 +406,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
               mediaProvider.loadMediaByCountry(
                 _selectedCountry!.id,
                 filterType: newValue,
+                refresh: true,
               );
             }
           },
@@ -402,14 +428,25 @@ class _CountriesScreenState extends State<CountriesScreen> {
         final count = crossAxisCount.clamp(1, 5);
 
         return GridView.builder(
+          controller: _scrollController,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: count,
             childAspectRatio: 0.68,
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
           ),
-          itemCount: posters.length,
+          itemCount:
+              posters.length +
+              (Provider.of<CountryMediaProvider>(context).hasMore ? 1 : 0),
           itemBuilder: (context, index) {
+            if (index == posters.length) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
             final poster = posters[index];
             final mediaItem = poster.toMediaItem();
             return MediaCard(

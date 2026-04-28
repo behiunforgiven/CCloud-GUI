@@ -3,7 +3,7 @@ import '../models/media_item.dart';
 import 'base_repository.dart';
 
 class MovieRepository extends BaseRepository {
-  static const String _moviesEndpoint = '/movie/by/filtres';
+  static const String _moviesEndpoint = '/poster/by/filtres';
 
   Future<List<MediaItem>> getMovies({
     int page = 0,
@@ -13,7 +13,7 @@ class MovieRepository extends BaseRepository {
   }) async {
     try {
       final url =
-          '${baseUrl}$_moviesEndpoint/$genreId/$countryId/${filterType.apiValue}/$page/${apiKey}';
+          '${baseUrl}$_moviesEndpoint/0/$countryId/${filterType.apiValue}/$page/${apiKey}';
       final jsonData = await executeRequest(url);
       return parseMovies(jsonData);
     } catch (e) {
@@ -29,7 +29,9 @@ class MovieRepository extends BaseRepository {
       try {
         final movieObj = item as Map<String, dynamic>;
         final movie = MediaItem.fromJson(movieObj);
-        movies.add(movie);
+        if (movie.type == 'movie') {
+          movies.add(movie);
+        }
       } catch (e) {
         continue;
       }

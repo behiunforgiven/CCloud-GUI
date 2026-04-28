@@ -15,7 +15,16 @@ class MovieProvider with ChangeNotifier {
   int _selectedCountryId = 0;
   FilterType _selectedFilter = FilterType.defaultFilter;
 
-  List<MediaItem> get movies => _movies;
+  List<MediaItem> get movies {
+    return _movies
+        .where(
+          (movie) =>
+              _selectedGenreId == 0 ||
+              movie.genres.any((genre) => genre.id == _selectedGenreId),
+        )
+        .toList();
+  }
+
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
@@ -45,7 +54,7 @@ class MovieProvider with ChangeNotifier {
 
       final newMovies = await _movieRepository.getMovies(
         page: _currentPage,
-        genreId: _selectedGenreId,
+        genreId: 0,
         countryId: _selectedCountryId,
         filterType: _selectedFilter,
       );
@@ -54,19 +63,18 @@ class MovieProvider with ChangeNotifier {
           .where((movie) => !containsFarsiOrArabic(movie.title))
           .toList();
 
-      if (filteredMovies.isEmpty && newMovies.isNotEmpty) {
-        _currentPage++;
-        _isLoading = false;
-        notifyListeners();
-        await loadMovies();
-        return;
-      }
-
       if (newMovies.isEmpty) {
         _hasMore = false;
       } else {
         _movies.addAll(filteredMovies);
         _currentPage++;
+
+        if (movies.isEmpty && _hasMore) {
+          _isLoading = false;
+          notifyListeners();
+          await loadMovies();
+          return;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -82,7 +90,11 @@ class MovieProvider with ChangeNotifier {
 
   void selectGenre(int genreId) {
     _selectedGenreId = genreId;
-    refreshMovies();
+    notifyListeners();
+
+    if (movies.isEmpty && _hasMore && !_isLoading) {
+      loadMovies();
+    }
   }
 
   void selectCountry(int countryId) {

@@ -15,7 +15,20 @@ class SeriesProvider with ChangeNotifier {
   int _selectedCountryId = 0;
   FilterType _selectedFilter = FilterType.defaultFilter;
 
-  List<MediaItem> get series => _series;
+  List<MediaItem> get series {
+    return _series
+        .where(
+          (item) =>
+              (_selectedGenreId == 0 ||
+                  item.genres.any((genre) => genre.id == _selectedGenreId)) &&
+              (_selectedCountryId == 0 ||
+                  item.countries.any(
+                    (country) => country.id == _selectedCountryId,
+                  )),
+        )
+        .toList();
+  }
+
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
@@ -45,7 +58,7 @@ class SeriesProvider with ChangeNotifier {
 
       final newSeries = await _seriesRepository.getSeries(
         page: _currentPage,
-        genreId: _selectedGenreId,
+        genreId: 0,
         countryId: _selectedCountryId,
         filterType: _selectedFilter,
       );
@@ -55,21 +68,18 @@ class SeriesProvider with ChangeNotifier {
           .where((series) => !containsFarsiOrArabic(series.title))
           .toList();
 
-      if (filteredSeries.isEmpty && newSeries.isNotEmpty) {
-        // If all series were filtered out, try to load more
-        _currentPage++;
-        _isLoading = false;
-        notifyListeners();
-        // Load more series recursively
-        await loadSeries();
-        return;
-      }
-
       if (newSeries.isEmpty) {
         _hasMore = false;
       } else {
         _series.addAll(filteredSeries);
         _currentPage++;
+
+        if (series.isEmpty && _hasMore) {
+          _isLoading = false;
+          notifyListeners();
+          await loadSeries();
+          return;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -85,7 +95,11 @@ class SeriesProvider with ChangeNotifier {
 
   void selectGenre(int genreId) {
     _selectedGenreId = genreId;
-    refreshSeries();
+    notifyListeners();
+
+    if (series.isEmpty && _hasMore && !_isLoading) {
+      loadSeries();
+    }
   }
 
   void selectCountry(int countryId) {

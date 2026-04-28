@@ -86,9 +86,16 @@ class _MoviesScreenState extends State<MoviesScreen> {
                   builder: (context, genreProvider, child) {
                     return ElevatedButton(
                       onPressed: () {
+                        final movieProvider = Provider.of<MovieProvider>(
+                          context,
+                          listen: false,
+                        );
+
                         showModalBottomSheet(
                           context: context,
-                          builder: (context) => const GenreSelector(),
+                          builder: (context) => GenreSelector(
+                            onGenreSelected: movieProvider.selectGenre,
+                          ),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.vertical(
                               top: Radius.circular(20),
@@ -207,10 +214,11 @@ class _MoviesScreenState extends State<MoviesScreen> {
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
-                      final crossAxisCount = ((constraints.maxWidth + spacing) /
-                              (cardWidth + spacing))
-                          .floor()
-                          .toInt();
+                      final crossAxisCount =
+                          ((constraints.maxWidth + spacing) /
+                                  (cardWidth + spacing))
+                              .floor()
+                              .toInt();
 
                       final count = crossAxisCount.clamp(1, 5);
 
@@ -222,7 +230,8 @@ class _MoviesScreenState extends State<MoviesScreen> {
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
-                        itemCount: movieProvider.movies.length +
+                        itemCount:
+                            movieProvider.movies.length +
                             (movieProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == movieProvider.movies.length) {

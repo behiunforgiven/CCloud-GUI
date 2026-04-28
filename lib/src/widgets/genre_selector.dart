@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/genre_provider.dart';
-import '../providers/movie_provider.dart';
 
 class GenreSelector extends StatefulWidget {
-  const GenreSelector({super.key});
+  const GenreSelector({super.key, required this.onGenreSelected});
+
+  final ValueChanged<int> onGenreSelected;
 
   @override
   State<GenreSelector> createState() => _GenreSelectorState();
@@ -63,11 +64,7 @@ class _GenreSelectorState extends State<GenreSelector> {
               GestureDetector(
                 onTap: () {
                   genreProvider.selectGenre(0);
-                  final movieProvider = Provider.of<MovieProvider>(
-                    context,
-                    listen: false,
-                  );
-                  movieProvider.selectGenre(0);
+                  widget.onGenreSelected(0);
                   Navigator.of(context).pop();
                 },
                 child: Container(
@@ -152,11 +149,7 @@ class _GenreSelectorState extends State<GenreSelector> {
                       return GestureDetector(
                         onTap: () {
                           genreProvider.selectGenre(genre.id);
-                          final movieProvider = Provider.of<MovieProvider>(
-                            context,
-                            listen: false,
-                          );
-                          movieProvider.selectGenre(genre.id);
+                          widget.onGenreSelected(genre.id);
                           Navigator.of(context).pop();
                         },
                         child: Container(
