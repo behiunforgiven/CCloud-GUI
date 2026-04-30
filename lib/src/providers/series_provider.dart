@@ -3,6 +3,8 @@ import '../models/media_item.dart';
 import '../repositories/series_repository.dart';
 import '../utils/storage_utils.dart';
 
+const int _kMinVisibleItems = 10;
+
 class SeriesProvider with ChangeNotifier {
   final SeriesRepository _seriesRepository = SeriesRepository();
 
@@ -74,7 +76,7 @@ class SeriesProvider with ChangeNotifier {
         _series.addAll(filteredSeries);
         _currentPage++;
 
-        if (series.isEmpty && _hasMore) {
+        if (series.length < _kMinVisibleItems && _hasMore) {
           _isLoading = false;
           notifyListeners();
           await loadSeries();
@@ -97,7 +99,7 @@ class SeriesProvider with ChangeNotifier {
     _selectedGenreId = genreId;
     notifyListeners();
 
-    if (series.isEmpty && _hasMore && !_isLoading) {
+    if (series.length < _kMinVisibleItems && _hasMore && !_isLoading) {
       loadSeries();
     }
   }

@@ -3,6 +3,8 @@ import '../models/media_item.dart';
 import '../repositories/movie_repository.dart';
 import '../utils/storage_utils.dart';
 
+const int _kMinVisibleItems = 10;
+
 class MovieProvider with ChangeNotifier {
   final MovieRepository _movieRepository = MovieRepository();
 
@@ -69,7 +71,7 @@ class MovieProvider with ChangeNotifier {
         _movies.addAll(filteredMovies);
         _currentPage++;
 
-        if (movies.isEmpty && _hasMore) {
+        if (movies.length < _kMinVisibleItems && _hasMore) {
           _isLoading = false;
           notifyListeners();
           await loadMovies();
@@ -92,7 +94,7 @@ class MovieProvider with ChangeNotifier {
     _selectedGenreId = genreId;
     notifyListeners();
 
-    if (movies.isEmpty && _hasMore && !_isLoading) {
+    if (movies.length < _kMinVisibleItems && _hasMore && !_isLoading) {
       loadMovies();
     }
   }
