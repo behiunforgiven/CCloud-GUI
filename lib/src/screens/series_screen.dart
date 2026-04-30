@@ -52,6 +52,15 @@ class _SeriesScreenState extends State<SeriesScreen> {
     super.dispose();
   }
 
+  void _checkAndLoadMore() {
+    if (!_scrollController.hasClients) return;
+    final seriesProvider = Provider.of<SeriesProvider>(context, listen: false);
+    if (seriesProvider.isLoading || !seriesProvider.hasMore) return;
+    if (_scrollController.position.maxScrollExtent <= 0) {
+      seriesProvider.loadSeries();
+    }
+  }
+
   void _scrollListener() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -215,6 +224,9 @@ class _SeriesScreenState extends State<SeriesScreen> {
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _checkAndLoadMore(),
+                      );
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
@@ -242,11 +254,19 @@ class _SeriesScreenState extends State<SeriesScreen> {
                             (seriesProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == seriesProvider.series.length) {
-                            // Loading indicator for pagination
-                            return const Center(
+                            return Center(
                               child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
+                                padding: const EdgeInsets.all(8.0),
+                                child: seriesProvider.isLoading
+                                    ? const CircularProgressIndicator()
+                                    : ElevatedButton.icon(
+                                        onPressed: seriesProvider.loadSeries,
+                                        icon: const Icon(Icons.expand_more),
+                                        label: Text(
+                                          'بارگذاری بیشتر',
+                                          style: GoogleFonts.vazirmatn(),
+                                        ),
+                                      ),
                               ),
                             );
                           }

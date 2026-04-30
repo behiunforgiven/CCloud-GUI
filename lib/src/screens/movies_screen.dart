@@ -49,6 +49,15 @@ class _MoviesScreenState extends State<MoviesScreen> {
     super.dispose();
   }
 
+  void _checkAndLoadMore() {
+    if (!_scrollController.hasClients) return;
+    final movieProvider = Provider.of<MovieProvider>(context, listen: false);
+    if (movieProvider.isLoading || !movieProvider.hasMore) return;
+    if (_scrollController.position.maxScrollExtent <= 0) {
+      movieProvider.loadMovies();
+    }
+  }
+
   void _scrollListener() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -211,6 +220,9 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _checkAndLoadMore(),
+                      );
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0; // Increased card width
                       final spacing = 20.0;
@@ -235,11 +247,19 @@ class _MoviesScreenState extends State<MoviesScreen> {
                             (movieProvider.hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == movieProvider.movies.length) {
-                            // Loading indicator for pagination
-                            return const Center(
+                            return Center(
                               child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(),
+                                padding: const EdgeInsets.all(8.0),
+                                child: movieProvider.isLoading
+                                    ? const CircularProgressIndicator()
+                                    : ElevatedButton.icon(
+                                        onPressed: movieProvider.loadMovies,
+                                        icon: const Icon(Icons.expand_more),
+                                        label: Text(
+                                          'بارگذاری بیشتر',
+                                          style: GoogleFonts.vazirmatn(),
+                                        ),
+                                      ),
                               ),
                             );
                           }
