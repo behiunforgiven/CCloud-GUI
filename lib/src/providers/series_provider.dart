@@ -73,10 +73,13 @@ class SeriesProvider with ChangeNotifier {
       if (newSeries.isEmpty) {
         _hasMore = false;
       } else {
+        final visibleBefore = series.length;
         _series.addAll(filteredSeries);
         _currentPage++;
 
-        if (series.length < _kMinVisibleItems && _hasMore) {
+        if ((series.length < _kMinVisibleItems ||
+                series.length == visibleBefore) &&
+            _hasMore) {
           _isLoading = false;
           notifyListeners();
           await loadSeries();

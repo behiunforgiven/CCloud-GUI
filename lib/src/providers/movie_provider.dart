@@ -68,10 +68,13 @@ class MovieProvider with ChangeNotifier {
       if (newMovies.isEmpty) {
         _hasMore = false;
       } else {
+        final visibleBefore = movies.length;
         _movies.addAll(filteredMovies);
         _currentPage++;
 
-        if (movies.length < _kMinVisibleItems && _hasMore) {
+        if ((movies.length < _kMinVisibleItems ||
+                movies.length == visibleBefore) &&
+            _hasMore) {
           _isLoading = false;
           notifyListeners();
           await loadMovies();
