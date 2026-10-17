@@ -102,7 +102,7 @@ This project is built with Flutter and uses the following technologies:
 - **HTTP** for API communication
 - **Google Fonts** for typography
 - **Shared Preferences** for local storage
-- **VLC** for media playback
+- **Samavar Lite / PotPlayer / VLC** for media playback
 
 ### 🏗️ Architecture
 

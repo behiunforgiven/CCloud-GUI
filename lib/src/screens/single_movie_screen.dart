@@ -499,15 +499,15 @@ class _SingleMovieScreenState extends State<SingleMovieScreen> {
                       child: OutlinedButton(
                         onPressed: () async {
                           Navigator.pop(context);
-                          final success = await VLCLauncher.launchInVLC(
+                          final success = await VLCLauncher.launchPlayer(
                             source.url,
                           );
                           if (!success) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   content: Text(
-                                    'نمی‌توان لینک را در VLC باز کرد',
+                                    VLCLauncher.playErrorMessage,
                                   ),
                                 ),
                               );
@@ -521,7 +521,7 @@ class _SingleMovieScreenState extends State<SingleMovieScreen> {
                           ),
                         ),
                         child: Text(
-                          'پخش با VLC',
+                          VLCLauncher.playButtonText,
                           style: GoogleFonts.vazirmatn(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
