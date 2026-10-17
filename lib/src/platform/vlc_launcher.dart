@@ -48,33 +48,54 @@ class VLCLauncher {
   static Future<bool> _launchOnMacOS(String url) async {
     try {
       const samavarAppPath = '/Applications/Samavar Lite.app';
-      if (await Directory(samavarAppPath).exists()) {
-        // -n flag starts a new instance if needed, which handles single-instance URL forwarding and exits immediately.
-        final result = await Process.run('open', [
+      final samavarExists = await Directory(samavarAppPath).exists();
+
+      if (samavarExists) {
+        // 1. Launch with open -a (LaunchServices passes the URL to the app via QFileOpenEvent or IPC)
+        final openResult = await Process.run('open', [
+          '-a',
+          samavarAppPath,
+          url,
+        ]);
+        if (openResult.exitCode == 0) return true;
+
+        // 2. Try with --args (passes URL directly to argv)
+        final argsResult = await Process.run('open', [
+          '-a',
+          samavarAppPath,
+          '--args',
+          url,
+        ]);
+        if (argsResult.exitCode == 0) return true;
+
+        // 3. Fallback with -n (new instance forwarding)
+        final newResult = await Process.run('open', [
           '-n',
           '-a',
           samavarAppPath,
           '--args',
           url,
         ]);
-        if (result.exitCode == 0) return true;
+        if (newResult.exitCode == 0) return true;
 
-        // Fallback without -n
-        final retryResult = await Process.run('open', [
-          '-a',
-          samavarAppPath,
-          '--args',
-          url,
-        ]);
-        if (retryResult.exitCode == 0) return true;
+        // 4. Fallback directly executing the binary detached
+        const binPath = '$samavarAppPath/Contents/MacOS/Samavar Lite';
+        if (await File(binPath).exists()) {
+          try {
+            await Process.start(
+              binPath,
+              [url],
+              mode: ProcessStartMode.detached,
+            );
+            return true;
+          } catch (_) {}
+        }
       }
 
-      // Check if Samavar Lite is located in user ~/Applications or known to LaunchServices
+      // Check if Samavar Lite is registered under application name in LaunchServices
       final appNameResult = await Process.run('open', [
-        '-n',
         '-a',
         'Samavar Lite',
-        '--args',
         url,
       ]);
       if (appNameResult.exitCode == 0) return true;
