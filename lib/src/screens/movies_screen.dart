@@ -189,7 +189,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                           : () => movieProvider.loadMovies(isRetry: true),
                       icon: const Icon(Icons.download_rounded, size: 18),
                       label: Text(
-                        'بارگذاری بیشتر (Load More)',
+                        'بیشتر',
                         style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
                       ),
                     );
@@ -436,8 +436,8 @@ class _MoviesScreenState extends State<MoviesScreen> {
               ),
               label: Text(
                 provider.hasMore
-                    ? 'بارگذاری بیشتر (Load More)'
-                    : 'تلاش مجدد (بارگذاری بیشتر)',
+                    ? 'بیشتر'
+                    : 'تلاش مجدد (بیشتر)',
                 style: GoogleFonts.vazirmatn(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

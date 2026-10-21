@@ -195,7 +195,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
                           : () => seriesProvider.loadSeries(isRetry: true),
                       icon: const Icon(Icons.download_rounded, size: 18),
                       label: Text(
-                        'بارگذاری بیشتر (Load More)',
+                        'بیشتر',
                         style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
                       ),
                     );
@@ -435,8 +435,8 @@ class _SeriesScreenState extends State<SeriesScreen> {
               ),
               label: Text(
                 provider.hasMore
-                    ? 'بارگذاری بیشتر (Load More)'
-                    : 'تلاش مجدد (بارگذاری بیشتر)',
+                    ? 'بیشتر'
+                    : 'تلاش مجدد (بیشتر)',
                 style: GoogleFonts.vazirmatn(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

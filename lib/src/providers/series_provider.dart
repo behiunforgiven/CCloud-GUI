@@ -62,22 +62,27 @@ class SeriesProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      int pagesChecked = 0;
-      const int maxPagesPerBatch = 5;
-      int newItemsFoundThisBatch = 0;
+      int consecutiveEmptyTries = 0;
+      const int maxConsecutiveEmptyTries = 5;
+      final int initialVisibleCount = series.length;
 
-      while (_hasMore && pagesChecked < maxPagesPerBatch) {
+      while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {
         final result = await _seriesRepository.getSeries(
           page: _currentPage,
           genreId: 0,
           countryId: _selectedCountryId,
           filterType: _selectedFilter,
         );
-        pagesChecked++;
+
+        _currentPage++;
 
         if (result.isApiEmpty) {
-          _hasMore = false;
-          break;
+          consecutiveEmptyTries++;
+          if (consecutiveEmptyTries >= maxConsecutiveEmptyTries) {
+            _hasMore = false;
+            break;
+          }
+          continue;
         }
 
         // Filter out series with Farsi/Arabic titles
@@ -86,11 +91,23 @@ class SeriesProvider with ChangeNotifier {
             .toList();
 
         _series.addAll(filteredSeries);
-        newItemsFoundThisBatch += filteredSeries.length;
-        _currentPage++;
 
-        if (series.length >= _kMinVisibleItems || newItemsFoundThisBatch >= 5) {
-          break;
+        final currentVisibleCount = series.length;
+        final newItemsAdded = currentVisibleCount - initialVisibleCount;
+
+        if (newItemsAdded > 0) {
+          if (initialVisibleCount > 0 ||
+              currentVisibleCount >= _kMinVisibleItems ||
+              newItemsAdded >= 5) {
+            break;
+          }
+          consecutiveEmptyTries = 0;
+        } else {
+          consecutiveEmptyTries++;
+          if (consecutiveEmptyTries >= maxConsecutiveEmptyTries) {
+            _hasMore = false;
+            break;
+          }
         }
       }
     } catch (e) {

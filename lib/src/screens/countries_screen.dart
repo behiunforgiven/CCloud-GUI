@@ -310,7 +310,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
                         : () => mediaProvider.loadMore(),
                     icon: const Icon(Icons.download_rounded, size: 18),
                     label: Text(
-                      'بارگذاری بیشتر (Load More)',
+                      'بیشتر',
                       style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
                     ),
                   );
@@ -533,7 +533,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton.icon(
-              onPressed: () => provider.loadMore(),
+              onPressed: () => provider.loadMore(isRetry: true),
               icon: Icon(
                 provider.hasMore
                     ? Icons.expand_more_rounded
@@ -541,8 +541,8 @@ class _CountriesScreenState extends State<CountriesScreen> {
               ),
               label: Text(
                 provider.hasMore
-                    ? 'بارگذاری بیشتر (Load More)'
-                    : 'تلاش مجدد (بارگذاری بیشتر)',
+                    ? 'بیشتر'
+                    : 'تلاش مجدد (بیشتر)',
                 style: GoogleFonts.vazirmatn(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

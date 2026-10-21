@@ -57,22 +57,27 @@ class MovieProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      int pagesChecked = 0;
-      const int maxPagesPerBatch = 5;
-      int newItemsFoundThisBatch = 0;
+      int consecutiveEmptyTries = 0;
+      const int maxConsecutiveEmptyTries = 5;
+      final int initialVisibleCount = movies.length;
 
-      while (_hasMore && pagesChecked < maxPagesPerBatch) {
+      while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {
         final result = await _movieRepository.getMovies(
           page: _currentPage,
           genreId: 0,
           countryId: _selectedCountryId,
           filterType: _selectedFilter,
         );
-        pagesChecked++;
+
+        _currentPage++;
 
         if (result.isApiEmpty) {
-          _hasMore = false;
-          break;
+          consecutiveEmptyTries++;
+          if (consecutiveEmptyTries >= maxConsecutiveEmptyTries) {
+            _hasMore = false;
+            break;
+          }
+          continue;
         }
 
         final filteredMovies = result.items
@@ -80,11 +85,23 @@ class MovieProvider with ChangeNotifier {
             .toList();
 
         _movies.addAll(filteredMovies);
-        newItemsFoundThisBatch += filteredMovies.length;
-        _currentPage++;
 
-        if (movies.length >= _kMinVisibleItems || newItemsFoundThisBatch >= 5) {
-          break;
+        final currentVisibleCount = movies.length;
+        final newItemsAdded = currentVisibleCount - initialVisibleCount;
+
+        if (newItemsAdded > 0) {
+          if (initialVisibleCount > 0 ||
+              currentVisibleCount >= _kMinVisibleItems ||
+              newItemsAdded >= 5) {
+            break;
+          }
+          consecutiveEmptyTries = 0;
+        } else {
+          consecutiveEmptyTries++;
+          if (consecutiveEmptyTries >= maxConsecutiveEmptyTries) {
+            _hasMore = false;
+            break;
+          }
         }
       }
     } catch (e) {

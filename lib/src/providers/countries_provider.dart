@@ -80,17 +80,28 @@ class CountryMediaProvider with ChangeNotifier {
         return;
       }
 
-      final newItems = await _repository.getPostersByCountry(
-        countryId,
-        page: _currentPage,
-        filterType: _currentFilter,
-      );
+      int consecutiveEmptyTries = 0;
+      const int maxConsecutiveEmptyTries = 5;
 
-      if (newItems.isEmpty) {
-        _hasMore = false;
-      } else {
-        _mediaItems.addAll(newItems);
+      while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {
+        final newItems = await _repository.getPostersByCountry(
+          countryId,
+          page: _currentPage,
+          filterType: _currentFilter,
+        );
+
         _currentPage++;
+
+        if (newItems.isEmpty) {
+          consecutiveEmptyTries++;
+          if (consecutiveEmptyTries >= maxConsecutiveEmptyTries) {
+            _hasMore = false;
+            break;
+          }
+        } else {
+          _mediaItems.addAll(newItems);
+          break;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -103,8 +114,12 @@ class CountryMediaProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loadMore() async {
+  Future<void> loadMore({bool isRetry = false}) async {
     if (_selectedCountryId == 0) return;
+    if (isRetry) {
+      _hasMore = true;
+      _errorMessage = null;
+    }
     await loadMediaByCountry(_selectedCountryId, filterType: _currentFilter);
   }
 }
