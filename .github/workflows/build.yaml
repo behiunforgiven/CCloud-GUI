@@ -90,7 +90,8 @@ jobs:
           # The built app is already a universal binary by default
           # Copy the app bundle to a temporary location
           TEMP_DIR=$(mktemp -d)
-          cp -R build/macos/Build/Products/Release/ccloud_gui.app "$TEMP_DIR/"
+          APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1 | head -n 1)
+          cp -R "$APP_PATH" "$TEMP_DIR/CCloud.app"
           
           # Create the DMG using create-dmg tool
           brew install create-dmg
@@ -111,7 +112,10 @@ jobs:
         run: |
           # Create a ZIP archive of the app bundle
           mkdir -p release
-          zip -r release/CCloud-macos-universal.zip build/macos/Build/Products/Release/ccloud_gui.app
+          APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1 | head -n 1)
+          APP_DIR=$(dirname "$APP_PATH")
+          APP_NAME=$(basename "$APP_PATH")
+          (cd "$APP_DIR" && zip -r -y "$GITHUB_WORKSPACE/release/CCloud-macos-universal.zip" "$APP_NAME")
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -201,7 +205,7 @@ jobs:
             -n ccloud \
             -v $VERSION \
             --description "CCloud Application" \
-            --url "https://github.com/code3-dev/CCloud-GUI" \
+            --url "https://github.com/${{ github.repository }}" \
             --maintainer "Hossein Pira" \
             --vendor "CCloud" \
             --license "MIT" \
@@ -217,7 +221,7 @@ jobs:
             -n ccloud \
             -v $VERSION \
             --description "CCloud" \
-            --url "https://github.com/code3-dev/CCloud-GUI" \
+            --url "https://github.com/${{ github.repository }}" \
             --maintainer "Hossein Pira" \
             --vendor "CCloud" \
             --license "MIT" \
@@ -368,14 +372,14 @@ jobs:
             
             | Platform | Architecture | Download |
             |----------|-------------|----------|
-            | Windows  | x64 (Installer) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud_gui-setup.exe"><img src="https://img.shields.io/badge/Windows-Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer"></a> |
-            | Windows  | x64 (Portable ZIP) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-windows-portable.zip"><img src="https://img.shields.io/badge/Windows-x64--Portable--ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 Portable ZIP"></a> |
-            | macOS    | Universal (.dmg) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.dmg"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal DMG"></a> |
-            | macOS    | Universal (.zip) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.zip"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal ZIP"></a> |
-            | Linux    | x64 (tar.gz) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-linux.tar.gz"><img src="https://img.shields.io/badge/Linux-tar.gz-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux tar.gz"></a> |
-            | Linux    | x64 (AppImage) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/CCloud-${{ env.VERSION }}-linux.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage"></a> |
-            | Linux    | x64 (.deb) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.deb"><img src="https://img.shields.io/badge/Linux-.deb-FCC624?style=for-the-badge&logo=debian&logoColor=white" alt="Linux .deb"></a> |
-            | Linux    | x64 (.rpm) | <a href="https://github.com/code3-dev/CCloud-GUI/releases/download/${{ env.TAG_NAME }}/ccloud.rpm"><img src="https://img.shields.io/badge/Linux-.rpm-FCC624?style=for-the-badge&logo=redhat&logoColor=white" alt="Linux .rpm"></a> |
+            | Windows  | x64 (Installer) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/ccloud_gui-setup.exe"><img src="https://img.shields.io/badge/Windows-Installer-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Installer"></a> |
+            | Windows  | x64 (Portable ZIP) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/CCloud-windows-portable.zip"><img src="https://img.shields.io/badge/Windows-x64--Portable--ZIP-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows x64 Portable ZIP"></a> |
+            | macOS    | Universal (.dmg) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.dmg"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal DMG"></a> |
+            | macOS    | Universal (.zip) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/CCloud-macos-universal.zip"><img src="https://img.shields.io/badge/macOS-Universal-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Universal ZIP"></a> |
+            | Linux    | x64 (tar.gz) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/CCloud-linux.tar.gz"><img src="https://img.shields.io/badge/Linux-tar.gz-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux tar.gz"></a> |
+            | Linux    | x64 (AppImage) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/CCloud-${{ env.VERSION }}-linux.AppImage"><img src="https://img.shields.io/badge/Linux-AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux AppImage"></a> |
+            | Linux    | x64 (.deb) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/ccloud.deb"><img src="https://img.shields.io/badge/Linux-.deb-FCC624?style=for-the-badge&logo=debian&logoColor=white" alt="Linux .deb"></a> |
+            | Linux    | x64 (.rpm) | <a href="https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/ccloud.rpm"><img src="https://img.shields.io/badge/Linux-.rpm-FCC624?style=for-the-badge&logo=redhat&logoColor=white" alt="Linux .rpm"></a> |
             | Android  | Universal APK | <a href="https://github.com/code3-dev/CCloud/releases/latest/download/CCloud-universal.apk"><img src="https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android Universal APK"></a> |
             
-            For detailed instructions on installing and running CCloud on Linux, please refer to our [Linux Installation Guide](https://github.com/code3-dev/CCloud-GUI/blob/main/assets/LINUX_INSTALL.md).
+            For detailed instructions on installing and running CCloud on Linux, please refer to our [Linux Installation Guide](https://github.com/${{ github.repository }}/blob/master/assets/LINUX_INSTALL.md).
