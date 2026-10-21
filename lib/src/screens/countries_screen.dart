@@ -287,6 +287,7 @@ class _CountriesScreenState extends State<CountriesScreen> {
               // Refresh button
               IconButton(
                 icon: const Icon(Icons.refresh),
+                tooltip: 'تازه‌سازی از ابتدا',
                 onPressed: () {
                   final mediaProvider = Provider.of<CountryMediaProvider>(
                     context,
@@ -296,6 +297,22 @@ class _CountriesScreenState extends State<CountriesScreen> {
                     _selectedCountry!.id,
                     filterType: mediaProvider.currentFilter,
                     refresh: true,
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              // Button to load more items
+              Consumer<CountryMediaProvider>(
+                builder: (context, mediaProvider, child) {
+                  return ElevatedButton.icon(
+                    onPressed: mediaProvider.isLoading
+                        ? null
+                        : () => mediaProvider.loadMore(),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: Text(
+                      'بارگذاری بیشتر (Load More)',
+                      style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
+                    ),
                   );
                 },
               ),
@@ -427,57 +444,137 @@ class _CountriesScreenState extends State<CountriesScreen> {
 
         final count = crossAxisCount.clamp(1, 5);
 
-        return GridView.builder(
+        final countryMediaProvider = Provider.of<CountryMediaProvider>(context);
+
+        return CustomScrollView(
           controller: _scrollController,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: count,
-            childAspectRatio: 0.68,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-          ),
-          itemCount:
-              posters.length +
-              (Provider.of<CountryMediaProvider>(context).hasMore ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index == posters.length) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-            final poster = posters[index];
-            final mediaItem = poster.toMediaItem();
-            return MediaCard(
-              mediaItem: mediaItem,
-              onTap: () async {
-                if (poster.isMovie()) {
-                  await StorageUtils.saveMovie(mediaItem);
-                  if (context.mounted) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SingleMovieScreen(movie: mediaItem),
-                      ),
-                    );
-                  }
-                } else if (poster.isSeries()) {
-                  await StorageUtils.saveSeries(mediaItem);
-                  if (context.mounted) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SingleSeriesScreen(series: mediaItem),
-                      ),
-                    );
-                  }
-                }
-              },
-            );
-          },
+          slivers: [
+            SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: count,
+                childAspectRatio: 0.68,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final poster = posters[index];
+                  final mediaItem = poster.toMediaItem();
+                  return MediaCard(
+                    mediaItem: mediaItem,
+                    onTap: () async {
+                      if (poster.isMovie()) {
+                        await StorageUtils.saveMovie(mediaItem);
+                        if (context.mounted) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SingleMovieScreen(movie: mediaItem),
+                            ),
+                          );
+                        }
+                      } else if (poster.isSeries()) {
+                        await StorageUtils.saveSeries(mediaItem);
+                        if (context.mounted) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SingleSeriesScreen(series: mediaItem),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  );
+                },
+                childCount: posters.length,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildCountryMediaFooter(context, countryMediaProvider),
+            ),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildCountryMediaFooter(
+    BuildContext context,
+    CountryMediaProvider provider,
+  ) {
+    if (provider.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28.0),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                'در حال بارگذاری موارد بیشتر...',
+                style: GoogleFonts.vazirmatn(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => provider.loadMore(),
+              icon: Icon(
+                provider.hasMore
+                    ? Icons.expand_more_rounded
+                    : Icons.refresh_rounded,
+              ),
+              label: Text(
+                provider.hasMore
+                    ? 'بارگذاری بیشتر (Load More)'
+                    : 'تلاش مجدد (بارگذاری بیشتر)',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (!provider.hasMore) ...[
+              const SizedBox(height: 8),
+              Text(
+                'به انتهای موارد فعلی رسیدید.',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 12,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

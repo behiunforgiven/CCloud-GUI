@@ -49,14 +49,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
     super.dispose();
   }
 
-  void _checkAndLoadMore() {
-    if (!_scrollController.hasClients) return;
-    final movieProvider = Provider.of<MovieProvider>(context, listen: false);
-    if (movieProvider.isLoading || !movieProvider.hasMore) return;
-    if (_scrollController.position.maxScrollExtent <= 0) {
-      movieProvider.loadMovies();
-    }
-  }
 
   void _scrollListener() {
     if (_scrollController.position.pixels >=
@@ -197,8 +189,8 @@ class _MoviesScreenState extends State<MoviesScreen> {
                           : () => movieProvider.loadMovies(isRetry: true),
                       icon: const Icon(Icons.download_rounded, size: 18),
                       label: Text(
-                        'بارگذاری بعدی',
-                        style: GoogleFonts.vazirmatn(),
+                        'بارگذاری بیشتر (Load More)',
+                        style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
                       ),
                     );
                   },
@@ -288,9 +280,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
                   return LayoutBuilder(
                     builder: (context, constraints) {
-                      WidgetsBinding.instance.addPostFrameCallback(
-                        (_) => _checkAndLoadMore(),
-                      );
                       // Calculate cross axis count based on available width
                       final cardWidth = 200.0;
                       final spacing = 20.0;
@@ -447,11 +436,11 @@ class _MoviesScreenState extends State<MoviesScreen> {
               ),
               label: Text(
                 provider.hasMore
-                    ? 'بارگذاری موارد بعدی'
-                    : 'تلاش مجدد برای بارگذاری موارد بعدی',
+                    ? 'بارگذاری بیشتر (Load More)'
+                    : 'تلاش مجدد (بارگذاری بیشتر)',
                 style: GoogleFonts.vazirmatn(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               style: ElevatedButton.styleFrom(
