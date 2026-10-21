@@ -436,7 +436,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
               label: Text(
                 provider.hasMore
                     ? 'بیشتر'
-                    : 'تلاش مجدد (بیشتر)',
+                    : 'تلاش مجدد',
                 style: GoogleFonts.vazirmatn(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
