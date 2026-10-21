@@ -186,21 +186,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
                     seriesProvider.refreshSeries();
                   },
                 ),
-                // Button to load/retry next items
-                Consumer<SeriesProvider>(
-                  builder: (context, seriesProvider, child) {
-                    return ElevatedButton.icon(
-                      onPressed: seriesProvider.isLoading
-                          ? null
-                          : () => seriesProvider.loadSeries(isRetry: true),
-                      icon: const Icon(Icons.download_rounded, size: 18),
-                      label: Text(
-                        'بیشتر',
-                        style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 20),

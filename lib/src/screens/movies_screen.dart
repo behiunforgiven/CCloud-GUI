@@ -180,21 +180,6 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     movieProvider.refreshMovies();
                   },
                 ),
-                // Button to load/retry next items
-                Consumer<MovieProvider>(
-                  builder: (context, movieProvider, child) {
-                    return ElevatedButton.icon(
-                      onPressed: movieProvider.isLoading
-                          ? null
-                          : () => movieProvider.loadMovies(isRetry: true),
-                      icon: const Icon(Icons.download_rounded, size: 18),
-                      label: Text(
-                        'بیشتر',
-                        style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 20),

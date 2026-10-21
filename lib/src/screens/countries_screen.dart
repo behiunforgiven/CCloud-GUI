@@ -300,22 +300,6 @@ class _CountriesScreenState extends State<CountriesScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 8),
-              // Button to load more items
-              Consumer<CountryMediaProvider>(
-                builder: (context, mediaProvider, child) {
-                  return ElevatedButton.icon(
-                    onPressed: mediaProvider.isLoading
-                        ? null
-                        : () => mediaProvider.loadMore(),
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    label: Text(
-                      'بیشتر',
-                      style: GoogleFonts.vazirmatn(fontWeight: FontWeight.bold),
-                    ),
-                  );
-                },
-              ),
             ],
           ),
           const SizedBox(height: 24),
