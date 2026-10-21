@@ -81,7 +81,7 @@ class CountryMediaProvider with ChangeNotifier {
       }
 
       int consecutiveEmptyTries = 0;
-      const int maxConsecutiveEmptyTries = 5;
+      const int maxConsecutiveEmptyTries = 10;
 
       while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {
         final newItems = await _repository.getPostersByCountry(

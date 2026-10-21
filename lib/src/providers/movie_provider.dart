@@ -58,7 +58,7 @@ class MovieProvider with ChangeNotifier {
 
     try {
       int consecutiveEmptyTries = 0;
-      const int maxConsecutiveEmptyTries = 5;
+      const int maxConsecutiveEmptyTries = 10;
       final int initialVisibleCount = movies.length;
 
       while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {

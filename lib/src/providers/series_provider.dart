@@ -63,7 +63,7 @@ class SeriesProvider with ChangeNotifier {
 
     try {
       int consecutiveEmptyTries = 0;
-      const int maxConsecutiveEmptyTries = 5;
+      const int maxConsecutiveEmptyTries = 10;
       final int initialVisibleCount = series.length;
 
       while (_hasMore && consecutiveEmptyTries < maxConsecutiveEmptyTries) {
