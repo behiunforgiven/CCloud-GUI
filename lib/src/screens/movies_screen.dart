@@ -179,12 +179,28 @@ class _MoviesScreenState extends State<MoviesScreen> {
                 // Refresh button
                 IconButton(
                   icon: const Icon(Icons.refresh),
+                  tooltip: 'تازه‌سازی از ابتدا',
                   onPressed: () {
                     final movieProvider = Provider.of<MovieProvider>(
                       context,
                       listen: false,
                     );
                     movieProvider.refreshMovies();
+                  },
+                ),
+                // Button to load/retry next items
+                Consumer<MovieProvider>(
+                  builder: (context, movieProvider, child) {
+                    return ElevatedButton.icon(
+                      onPressed: movieProvider.isLoading
+                          ? null
+                          : () => movieProvider.loadMovies(isRetry: true),
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: Text(
+                        'بارگذاری بعدی',
+                        style: GoogleFonts.vazirmatn(),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -198,24 +214,76 @@ class _MoviesScreenState extends State<MoviesScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  if (movieProvider.errorMessage.isNotEmpty) {
+                  if (movieProvider.errorMessage.isNotEmpty &&
+                      movieProvider.movies.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text('Error: ${movieProvider.errorMessage}'),
                           const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: movieProvider.refreshMovies,
-                            child: const Text('تلاش مجدد'),
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              ElevatedButton(
+                                onPressed: movieProvider.refreshMovies,
+                                child: const Text('تلاش مجدد'),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: () => movieProvider.loadMovies(isRetry: true),
+                                icon: const Icon(Icons.download_rounded),
+                                label: const Text('بارگذاری صفحات بعدی'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     );
                   }
 
-                  if (movieProvider.movies.isEmpty) {
-                    return const Center(child: Text('فیلمی یافت نشد'));
+                  if (movieProvider.movies.isEmpty && !movieProvider.isLoading) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.movie_filter_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'فیلمی در این بخش یافت نشد',
+                            style: GoogleFonts.vazirmatn(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () => movieProvider.loadMovies(isRetry: true),
+                                icon: const Icon(Icons.download_rounded),
+                                label: Text(
+                                  'تلاش برای بارگذاری موارد بعدی',
+                                  style: GoogleFonts.vazirmatn(),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: movieProvider.refreshMovies,
+                                icon: const Icon(Icons.refresh),
+                                label: Text(
+                                  'تازه‌سازی از ابتدا',
+                                  style: GoogleFonts.vazirmatn(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
                   }
 
                   return LayoutBuilder(
@@ -224,7 +292,7 @@ class _MoviesScreenState extends State<MoviesScreen> {
                         (_) => _checkAndLoadMore(),
                       );
                       // Calculate cross axis count based on available width
-                      final cardWidth = 200.0; // Increased card width
+                      final cardWidth = 200.0;
                       final spacing = 20.0;
                       final crossAxisCount =
                           ((constraints.maxWidth + spacing) /
@@ -234,86 +302,75 @@ class _MoviesScreenState extends State<MoviesScreen> {
 
                       final count = crossAxisCount.clamp(1, 5);
 
-                      return GridView.builder(
+                      return CustomScrollView(
                         controller: _scrollController,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: count,
-                          childAspectRatio: 0.68,
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                        ),
-                        itemCount:
-                            movieProvider.movies.length +
-                            (movieProvider.hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == movieProvider.movies.length) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: movieProvider.isLoading
-                                    ? const CircularProgressIndicator()
-                                    : ElevatedButton.icon(
-                                        onPressed: movieProvider.loadMovies,
-                                        icon: const Icon(Icons.expand_more),
-                                        label: Text(
-                                          'بارگذاری بیشتر',
-                                          style: GoogleFonts.vazirmatn(),
-                                        ),
-                                      ),
-                              ),
-                            );
-                          }
-
-                          final movie = movieProvider.movies[index];
-                          return MediaCard(
-                            mediaItem: MediaItem(
-                              id: movie.id,
-                              type: movie.type,
-                              title: movie.title,
-                              description: movie.description,
-                              year: movie.year,
-                              imdb: movie.imdb,
-                              rating: movie.rating,
-                              duration: movie.duration,
-                              image: movie.image,
-                              cover: movie.cover,
-                              genres: movie.genres
-                                  .map((g) => Genre(id: g.id, title: g.title))
-                                  .toList(),
-                              sources: movie.sources
-                                  .map(
-                                    (s) => Source(
-                                      id: s.id,
-                                      quality: s.quality,
-                                      type: s.type,
-                                      url: s.url,
-                                    ),
-                                  )
-                                  .toList(),
-                              countries: movie.countries
-                                  .map(
-                                    (c) => Country(
-                                      id: c.id,
-                                      title: c.title,
-                                      image: c.image,
-                                    ),
-                                  )
-                                  .toList(),
+                        slivers: [
+                          SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: count,
+                              childAspectRatio: 0.68,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
                             ),
-                            onTap: () async {
-                              // Save movie to storage and navigate to single movie screen
-                              await StorageUtils.saveMovie(movie);
-                              if (context.mounted) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        SingleMovieScreen(movie: movie),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final movie = movieProvider.movies[index];
+                                return MediaCard(
+                                  mediaItem: MediaItem(
+                                    id: movie.id,
+                                    type: movie.type,
+                                    title: movie.title,
+                                    description: movie.description,
+                                    year: movie.year,
+                                    imdb: movie.imdb,
+                                    rating: movie.rating,
+                                    duration: movie.duration,
+                                    image: movie.image,
+                                    cover: movie.cover,
+                                    genres: movie.genres
+                                        .map((g) => Genre(id: g.id, title: g.title))
+                                        .toList(),
+                                    sources: movie.sources
+                                        .map(
+                                          (s) => Source(
+                                            id: s.id,
+                                            quality: s.quality,
+                                            type: s.type,
+                                            url: s.url,
+                                          ),
+                                        )
+                                        .toList(),
+                                    countries: movie.countries
+                                        .map(
+                                          (c) => Country(
+                                            id: c.id,
+                                            title: c.title,
+                                            image: c.image,
+                                          ),
+                                        )
+                                        .toList(),
                                   ),
+                                  onTap: () async {
+                                    await StorageUtils.saveMovie(movie);
+                                    if (context.mounted) {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              SingleMovieScreen(movie: movie),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 );
-                              }
-                            },
-                          );
-                        },
+                              },
+                              childCount: movieProvider.movies.length,
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: _buildFooter(context, movieProvider),
+                          ),
+                        ],
                       );
                     },
                   );
@@ -325,4 +382,103 @@ class _MoviesScreenState extends State<MoviesScreen> {
       ),
     );
   }
+
+  Widget _buildFooter(BuildContext context, MovieProvider provider) {
+    if (provider.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28.0),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                'در حال بارگذاری موارد بیشتر...',
+                style: GoogleFonts.vazirmatn(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (provider.errorMessage.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'خطا در بارگذاری موارد بعدی: ${provider.errorMessage}',
+                style: GoogleFonts.vazirmatn(color: Colors.redAccent, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => provider.loadMovies(isRetry: true),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(
+                  'تلاش مجدد برای بارگذاری موارد بعدی',
+                  style: GoogleFonts.vazirmatn(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => provider.loadMovies(isRetry: true),
+              icon: Icon(
+                provider.hasMore ? Icons.expand_more_rounded : Icons.refresh_rounded,
+              ),
+              label: Text(
+                provider.hasMore
+                    ? 'بارگذاری موارد بعدی'
+                    : 'تلاش مجدد برای بارگذاری موارد بعدی',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (!provider.hasMore) ...[
+              const SizedBox(height: 8),
+              Text(
+                'به انتهای موارد فعلی رسیدید. با دکمه بالا می‌توانید صفحات بعدی را مجدداً بررسی کنید.',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 12,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
+

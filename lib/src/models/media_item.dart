@@ -52,7 +52,7 @@ class MediaItem {
               .toList() ??
           [],
       countries:
-          (json['country'] as List?)
+          ((json['country'] ?? json['countries']) as List?)
               ?.map((e) => Country.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -226,3 +226,16 @@ enum FilterType {
     }
   }
 }
+
+class MediaFetchResult {
+  final List<MediaItem> items;
+  final int rawCount;
+
+  const MediaFetchResult({
+    required this.items,
+    required this.rawCount,
+  });
+
+  bool get isApiEmpty => rawCount == 0;
+}
+

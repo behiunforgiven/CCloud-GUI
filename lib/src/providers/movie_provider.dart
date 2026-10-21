@@ -30,55 +30,61 @@ class MovieProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
+  int get currentPage => _currentPage;
   int get selectedGenreId => _selectedGenreId;
   int get selectedCountryId => _selectedCountryId;
   FilterType get selectedFilter => _selectedFilter;
 
-  Future<void> loadMovies({bool refresh = false}) async {
+  Future<void> loadMovies({bool refresh = false, bool isRetry = false}) async {
     if (_isLoading) return;
+
+    if (refresh) {
+      _movies = [];
+      _currentPage = 0;
+      _hasMore = true;
+      _errorMessage = '';
+    } else if (isRetry) {
+      _hasMore = true;
+      _errorMessage = '';
+    }
+
+    if (!_hasMore) {
+      return;
+    }
 
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      if (refresh) {
-        _movies = [];
-        _currentPage = 0;
-        _hasMore = true;
-      }
+      int pagesChecked = 0;
+      const int maxPagesPerBatch = 5;
+      int newItemsFoundThisBatch = 0;
 
-      if (!_hasMore) {
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
+      while (_hasMore && pagesChecked < maxPagesPerBatch) {
+        final result = await _movieRepository.getMovies(
+          page: _currentPage,
+          genreId: 0,
+          countryId: _selectedCountryId,
+          filterType: _selectedFilter,
+        );
+        pagesChecked++;
 
-      final newMovies = await _movieRepository.getMovies(
-        page: _currentPage,
-        genreId: 0,
-        countryId: _selectedCountryId,
-        filterType: _selectedFilter,
-      );
+        if (result.isApiEmpty) {
+          _hasMore = false;
+          break;
+        }
 
-      final filteredMovies = newMovies
-          .where((movie) => !containsFarsiOrArabic(movie.title))
-          .toList();
+        final filteredMovies = result.items
+            .where((movie) => !containsFarsiOrArabic(movie.title))
+            .toList();
 
-      if (newMovies.isEmpty) {
-        _hasMore = false;
-      } else {
-        final visibleBefore = movies.length;
         _movies.addAll(filteredMovies);
+        newItemsFoundThisBatch += filteredMovies.length;
         _currentPage++;
 
-        if ((movies.length < _kMinVisibleItems ||
-                movies.length == visibleBefore) &&
-            _hasMore) {
-          _isLoading = false;
-          notifyListeners();
-          await loadMovies();
-          return;
+        if (movies.length >= _kMinVisibleItems || newItemsFoundThisBatch >= 5) {
+          break;
         }
       }
     } catch (e) {

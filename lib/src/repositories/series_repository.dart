@@ -5,7 +5,7 @@ import 'base_repository.dart';
 class SeriesRepository extends BaseRepository {
   static const String _seriesEndpoint = '/poster/by/filtres';
 
-  Future<List<MediaItem>> getSeries({
+  Future<MediaFetchResult> getSeries({
     int page = 0,
     int genreId = 0,
     int countryId = 0,
@@ -21,7 +21,7 @@ class SeriesRepository extends BaseRepository {
     }
   }
 
-  List<MediaItem> parseSeries(String jsonData) {
+  MediaFetchResult parseSeries(String jsonData) {
     final seriesList = <MediaItem>[];
     final jsonArray = json.decode(jsonData) as List;
 
@@ -38,6 +38,10 @@ class SeriesRepository extends BaseRepository {
       }
     }
 
-    return seriesList;
+    return MediaFetchResult(
+      items: seriesList,
+      rawCount: jsonArray.length,
+    );
   }
 }
+

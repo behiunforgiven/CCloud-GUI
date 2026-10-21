@@ -185,12 +185,28 @@ class _SeriesScreenState extends State<SeriesScreen> {
                 // Refresh button
                 IconButton(
                   icon: const Icon(Icons.refresh),
+                  tooltip: 'تازه‌سازی از ابتدا',
                   onPressed: () {
                     final seriesProvider = Provider.of<SeriesProvider>(
                       context,
                       listen: false,
                     );
                     seriesProvider.refreshSeries();
+                  },
+                ),
+                // Button to load/retry next items
+                Consumer<SeriesProvider>(
+                  builder: (context, seriesProvider, child) {
+                    return ElevatedButton.icon(
+                      onPressed: seriesProvider.isLoading
+                          ? null
+                          : () => seriesProvider.loadSeries(isRetry: true),
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: Text(
+                        'بارگذاری بعدی',
+                        style: GoogleFonts.vazirmatn(),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -205,17 +221,72 @@ class _SeriesScreenState extends State<SeriesScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  // Add error handling similar to movies screen
-                  if (seriesProvider.errorMessage.isNotEmpty) {
+                  if (seriesProvider.errorMessage.isNotEmpty &&
+                      seriesProvider.series.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text('Error: ${seriesProvider.errorMessage}'),
                           const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: seriesProvider.refreshSeries,
-                            child: const Text('تلاش مجدد'),
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              ElevatedButton(
+                                onPressed: seriesProvider.refreshSeries,
+                                child: const Text('تلاش مجدد'),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: () => seriesProvider.loadSeries(isRetry: true),
+                                icon: const Icon(Icons.download_rounded),
+                                label: const Text('بارگذاری صفحات بعدی'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (seriesProvider.series.isEmpty && !seriesProvider.isLoading) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.tv_off_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'سریالی در این بخش یافت نشد',
+                            style: GoogleFonts.vazirmatn(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () => seriesProvider.loadSeries(isRetry: true),
+                                icon: const Icon(Icons.download_rounded),
+                                label: Text(
+                                  'تلاش برای بارگذاری موارد بعدی',
+                                  style: GoogleFonts.vazirmatn(),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: seriesProvider.refreshSeries,
+                                icon: const Icon(Icons.refresh),
+                                label: Text(
+                                  'تازه‌سازی از ابتدا',
+                                  style: GoogleFonts.vazirmatn(),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -228,7 +299,7 @@ class _SeriesScreenState extends State<SeriesScreen> {
                         (_) => _checkAndLoadMore(),
                       );
                       // Calculate cross axis count based on available width
-                      final cardWidth = 200.0; // Increased card width
+                      final cardWidth = 200.0;
                       final spacing = 20.0;
                       final crossAxisCount =
                           ((constraints.maxWidth + spacing) /
@@ -239,79 +310,66 @@ class _SeriesScreenState extends State<SeriesScreen> {
                       // Ensure at least 1 column and max 5 columns
                       final count = crossAxisCount.clamp(1, 5);
 
-                      return GridView.builder(
+                      return CustomScrollView(
                         controller: _scrollController,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              count, // Use dynamic count instead of fixed 5
-                          childAspectRatio:
-                              0.68, // Adjusted for the new card dimensions
-                          crossAxisSpacing: 20,
-                          mainAxisSpacing: 20,
-                        ),
-                        itemCount:
-                            seriesProvider.series.length +
-                            (seriesProvider.hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == seriesProvider.series.length) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: seriesProvider.isLoading
-                                    ? const CircularProgressIndicator()
-                                    : ElevatedButton.icon(
-                                        onPressed: seriesProvider.loadSeries,
-                                        icon: const Icon(Icons.expand_more),
-                                        label: Text(
-                                          'بارگذاری بیشتر',
-                                          style: GoogleFonts.vazirmatn(),
-                                        ),
-                                      ),
-                              ),
-                            );
-                          }
-
-                          final series = seriesProvider.series[index];
-                          return MediaCard(
-                            mediaItem: MediaItem(
-                              id: series.id,
-                              type: series.type,
-                              title: series.title,
-                              description: series.description,
-                              year: series.year,
-                              imdb: series.imdb,
-                              rating: series.rating,
-                              duration: series.duration,
-                              image: series.image,
-                              cover: series.cover,
-                              genres: series.genres
-                                  .map((g) => Genre(id: g.id, title: g.title))
-                                  .toList(),
-                              sources: [],
-                              countries: series.countries
-                                  .map(
-                                    (c) => Country(
-                                      id: c.id,
-                                      title: c.title,
-                                      image: c.image,
-                                    ),
-                                  )
-                                  .toList(),
+                        slivers: [
+                          SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: count,
+                              childAspectRatio: 0.68,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
                             ),
-                            onTap: () async {
-                              // Save series to storage and navigate to single series screen
-                              await StorageUtils.saveSeries(series);
-                              if (context.mounted) {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        SingleSeriesScreen(series: series),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final series = seriesProvider.series[index];
+                                return MediaCard(
+                                  mediaItem: MediaItem(
+                                    id: series.id,
+                                    type: series.type,
+                                    title: series.title,
+                                    description: series.description,
+                                    year: series.year,
+                                    imdb: series.imdb,
+                                    rating: series.rating,
+                                    duration: series.duration,
+                                    image: series.image,
+                                    cover: series.cover,
+                                    genres: series.genres
+                                        .map((g) => Genre(id: g.id, title: g.title))
+                                        .toList(),
+                                    sources: [],
+                                    countries: series.countries
+                                        .map(
+                                          (c) => Country(
+                                            id: c.id,
+                                            title: c.title,
+                                            image: c.image,
+                                          ),
+                                        )
+                                        .toList(),
                                   ),
+                                  onTap: () async {
+                                    await StorageUtils.saveSeries(series);
+                                    if (context.mounted) {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              SingleSeriesScreen(series: series),
+                                        ),
+                                      );
+                                    }
+                                  },
                                 );
-                              }
-                            },
-                          );
-                        },
+                              },
+                              childCount: seriesProvider.series.length,
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: _buildFooter(context, seriesProvider),
+                          ),
+                        ],
                       );
                     },
                   );
@@ -323,4 +381,103 @@ class _SeriesScreenState extends State<SeriesScreen> {
       ),
     );
   }
+
+  Widget _buildFooter(BuildContext context, SeriesProvider provider) {
+    if (provider.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28.0),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                'در حال بارگذاری موارد بیشتر...',
+                style: GoogleFonts.vazirmatn(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (provider.errorMessage.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'خطا در بارگذاری موارد بعدی: ${provider.errorMessage}',
+                style: GoogleFonts.vazirmatn(color: Colors.redAccent, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => provider.loadSeries(isRetry: true),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(
+                  'تلاش مجدد برای بارگذاری موارد بعدی',
+                  style: GoogleFonts.vazirmatn(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => provider.loadSeries(isRetry: true),
+              icon: Icon(
+                provider.hasMore ? Icons.expand_more_rounded : Icons.refresh_rounded,
+              ),
+              label: Text(
+                provider.hasMore
+                    ? 'بارگذاری موارد بعدی'
+                    : 'تلاش مجدد برای بارگذاری موارد بعدی',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (!provider.hasMore) ...[
+              const SizedBox(height: 8),
+              Text(
+                'به انتهای موارد فعلی رسیدید. با دکمه بالا می‌توانید صفحات بعدی را مجدداً بررسی کنید.',
+                style: GoogleFonts.vazirmatn(
+                  fontSize: 12,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
+

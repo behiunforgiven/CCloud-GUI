@@ -24,6 +24,7 @@ class SeriesProvider with ChangeNotifier {
               (_selectedGenreId == 0 ||
                   item.genres.any((genre) => genre.id == _selectedGenreId)) &&
               (_selectedCountryId == 0 ||
+                  item.countries.isEmpty ||
                   item.countries.any(
                     (country) => country.id == _selectedCountryId,
                   )),
@@ -34,56 +35,62 @@ class SeriesProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   bool get hasMore => _hasMore;
+  int get currentPage => _currentPage;
   int get selectedGenreId => _selectedGenreId;
   int get selectedCountryId => _selectedCountryId;
   FilterType get selectedFilter => _selectedFilter;
 
-  Future<void> loadSeries({bool refresh = false}) async {
+  Future<void> loadSeries({bool refresh = false, bool isRetry = false}) async {
     if (_isLoading) return;
+
+    if (refresh) {
+      _series = [];
+      _currentPage = 0;
+      _hasMore = true;
+      _errorMessage = '';
+    } else if (isRetry) {
+      _hasMore = true;
+      _errorMessage = '';
+    }
+
+    if (!_hasMore) {
+      return;
+    }
 
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      if (refresh) {
-        _series = [];
-        _currentPage = 0;
-        _hasMore = true;
-      }
+      int pagesChecked = 0;
+      const int maxPagesPerBatch = 5;
+      int newItemsFoundThisBatch = 0;
 
-      if (!_hasMore) {
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
+      while (_hasMore && pagesChecked < maxPagesPerBatch) {
+        final result = await _seriesRepository.getSeries(
+          page: _currentPage,
+          genreId: 0,
+          countryId: _selectedCountryId,
+          filterType: _selectedFilter,
+        );
+        pagesChecked++;
 
-      final newSeries = await _seriesRepository.getSeries(
-        page: _currentPage,
-        genreId: 0,
-        countryId: _selectedCountryId,
-        filterType: _selectedFilter,
-      );
+        if (result.isApiEmpty) {
+          _hasMore = false;
+          break;
+        }
 
-      // Filter out series with Farsi/Arabic titles
-      final filteredSeries = newSeries
-          .where((series) => !containsFarsiOrArabic(series.title))
-          .toList();
+        // Filter out series with Farsi/Arabic titles
+        final filteredSeries = result.items
+            .where((item) => !containsFarsiOrArabic(item.title))
+            .toList();
 
-      if (newSeries.isEmpty) {
-        _hasMore = false;
-      } else {
-        final visibleBefore = series.length;
         _series.addAll(filteredSeries);
+        newItemsFoundThisBatch += filteredSeries.length;
         _currentPage++;
 
-        if ((series.length < _kMinVisibleItems ||
-                series.length == visibleBefore) &&
-            _hasMore) {
-          _isLoading = false;
-          notifyListeners();
-          await loadSeries();
-          return;
+        if (series.length >= _kMinVisibleItems || newItemsFoundThisBatch >= 5) {
+          break;
         }
       }
     } catch (e) {
